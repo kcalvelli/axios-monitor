@@ -2,25 +2,27 @@
 
 ![](./assets/scrot.png)
 
-A [DankMaterialShell](https://danklinux.com/) plugin for monitoring Nix store disk usage and home-manager generations with integrated system management capabilities.
+A [DankMaterialShell](https://danklinux.com/) plugin for monitoring Nix store disk usage and system generations with integrated system management capabilities.
 
 ## Features
 
 ### Bar Widget Display
-- Generation count - Shows number of home-manager generations
-- Store size - Displays current Nix store disk usage
+- Generation count - Shows Nix system generations (configurable)
+- Store size - Shows Nix store disk usage (configurable)
 - Visual warnings - Icon and text turn red when store exceeds threshold
-- Auto-updates - Refreshes every 5 minutes (configurable)
+- Auto-updates - Configurable refresh interval
 
 ### Detailed Popout Panel
 Click the widget to open a detailed view with:
-- Summary cards - Large stat cards for generations and store size
+- Summary cards - Large stat cards for count and store size
 - Warning banner - Appears when store size exceeds threshold
 - Real-time console - View command output as it runs
 - Action buttons:
   - Refresh - Update statistics immediately
-  - Rebuild - Run `home-manager switch` to rebuild your system
-  - GC - Run `nix-collect-garbage -d` to free up space
+  - Rebuild - Run your configured rebuild command
+  - GC - Run your configured garbage collection command
+  - Cancel - Stop running operation
+- Clear button - Hide console output
 
 ### Configurable Settings
 Access via DMS Settings → Plugins → Nix Monitor:
@@ -52,17 +54,16 @@ Add to your `flake.nix`:
           programs.nix-monitor = {
             enable = true;
             
-            updateInterval = 300;
-            
+            # Required: specify your rebuild command
             rebuildCommand = [ 
               "/usr/bin/bash" "-l" "-c" 
               "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
             ];
             
-            gcCommand = [ 
-              "/usr/bin/bash" "-l" "-c" 
-              "nix-collect-garbage -d 2>&1" 
-            ];
+            # Optional: customize other commands
+            generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
+            
+            updateInterval = 300;
           };
         }
       ];
@@ -101,8 +102,8 @@ dms restart
 
 ### Popout Panel
 - Refresh - Updates all statistics immediately
-- Rebuild - Runs `home-manager switch -b backup --impure --flake .#home`
-- GC - Runs `nix-collect-garbage -d`
+- Rebuild - Runs your configured rebuild command
+- GC - Runs garbage collection (`nix-collect-garbage -d` by default)
 
 ### Console Output
 - Appears automatically when running Rebuild or GC
@@ -110,45 +111,110 @@ dms restart
 - Auto-scrolls to latest output
 - Click "Clear" to hide
 
-## Customization
+## Configuration
 
-### Via Flake Options (Recommended)
+The plugin provides sensible defaults for Nix system monitoring, but **rebuildCommand is required** and must be configured for your specific setup.
 
-Configure commands in your home-manager flake:
+### Default Commands
+
+If not overridden, the plugin uses these defaults:
+- `generationsCommand`: Lists system generations from `/nix/var/nix/profiles/system`
+- `storeSizeCommand`: Checks `/nix/store` disk usage with `du -sh`
+- `gcCommand`: Runs `nix-collect-garbage -d`
+- `updateInterval`: 300 seconds (5 minutes)
+
+**Note:** `rebuildCommand` has no default and must be explicitly configured.
+
+### Home-manager Example (Minimal)
 
 ```nix
 programs.nix-monitor = {
   enable = true;
   
-  updateInterval = 600;
-  
+  # Only rebuildCommand is required
   rebuildCommand = [ 
     "/usr/bin/bash" "-l" "-c" 
-    "cd /path/to/config && nixos-rebuild switch --flake .#hostname 2>&1"
-  ];
-  
-  gcCommand = [ 
-    "/usr/bin/bash" "-l" "-c" 
-    "nix-collect-garbage --delete-older-than 30d 2>&1" 
+    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
   ];
 };
 ```
 
-**Available Options:**
-- `updateInterval` - Update interval in seconds for refreshing statistics (default: 300)
-- `rebuildCommand` - Command to run for system rebuild (default: home-manager switch)
-- `gcCommand` - Command to run for garbage collection (default: nix-collect-garbage -d)
+### Home-manager Example (Full Customization)
 
-### Via QML File (For Development)
+```nix
+programs.nix-monitor = {
+  enable = true;
+  
+  # Track home-manager generations instead of system generations
+  generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
+  
+  rebuildCommand = [ 
+    "/usr/bin/bash" "-l" "-c" 
+    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
+  ];
+  
+  # Optional: customize other settings
+  updateInterval = 300;
+};
+```
 
-If not using the flake module, edit `NixMonitor.qml` directly and modify the default command properties.
+### NixOS Example (Minimal)
+
+Uses all defaults except rebuildCommand:
+
+```nix
+programs.nix-monitor = {
+  enable = true;
+  
+  # Only rebuildCommand is required - defaults work for NixOS
+  rebuildCommand = [ 
+    "/usr/bin/bash" "-l" "-c" 
+    "sudo nixos-rebuild switch --flake .#hostname 2>&1"
+  ];
+};
+```
+
+### NixOS Example (Full Customization)
+
+```nix
+programs.nix-monitor = {
+  enable = true;
+  
+  rebuildCommand = [ 
+    "/usr/bin/bash" "-l" "-c" 
+    "sudo nixos-rebuild switch --flake .#hostname 2>&1"
+  ];
+  
+  # Use sudo for garbage collection
+  gcCommand = [ 
+    "/usr/bin/bash" "-l" "-c" 
+    "sudo nix-collect-garbage -d 2>&1" 
+  ];
+  
+  updateInterval = 600;
+};
+```
+
+### Configuration Options
+
+#### Required
+- `rebuildCommand` - Command to run for system rebuild **(REQUIRED)**
+
+#### Optional (with defaults)
+- `generationsCommand` - Command to count system generations  
+  Default: `nix-env --list-generations --profile /nix/var/nix/profiles/system | wc -l`
+- `storeSizeCommand` - Command to get Nix store size  
+  Default: `du -sh /nix/store | cut -f1`
+- `gcCommand` - Command to run for garbage collection  
+  Default: `nix-collect-garbage -d`
+- `updateInterval` - Update interval in seconds  
+  Default: `300` (5 minutes)
 
 ## Requirements
 
 - DankMaterialShell >= 1.0.0
 - Nix package manager
-- home-manager
-- Bash
+- Shell (sh/bash)
 
 ## License
 

@@ -25,8 +25,10 @@ PluginComponent {
     property string runningOperation: ""
 
     property var config: null
-    property var rebuildCommand: ["/usr/bin/bash", "-l", "-c", "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"]
-    property var gcCommand: ["/usr/bin/bash", "-l", "-c", "nix-collect-garbage -d 2>&1"]
+    property var generationsCommand: ["sh", "-c", "echo 0"]
+    property var storeSizeCommand: ["sh", "-c", "echo ..."]
+    property var rebuildCommand: ["sh", "-c", "echo 'No rebuild command configured'"]
+    property var gcCommand: ["sh", "-c", "echo 'No GC command configured'"]
 
     property string configJsonContent: ""
 
@@ -45,6 +47,12 @@ PluginComponent {
             if (exitCode === 0 && root.configJsonContent) {
                 try {
                     var configData = JSON.parse(root.configJsonContent)
+                    if (configData.generationsCommand) {
+                        root.generationsCommand = configData.generationsCommand
+                    }
+                    if (configData.storeSizeCommand) {
+                        root.storeSizeCommand = configData.storeSizeCommand
+                    }
                     if (configData.rebuildCommand) {
                         root.rebuildCommand = configData.rebuildCommand
                     }
@@ -419,7 +427,7 @@ PluginComponent {
 
     Process {
         id: generationCountProcess
-        command: ["sh", "-c", "home-manager generations 2>/dev/null | wc -l"]
+        command: root.generationsCommand
         running: false
 
         stdout: SplitParser {
@@ -438,7 +446,7 @@ PluginComponent {
 
     Process {
         id: storeSizeProcess
-        command: ["sh", "-c", "du -sh /nix/store 2>/dev/null | cut -f1"]
+        command: root.storeSizeCommand
         running: false
 
         stdout: SplitParser {

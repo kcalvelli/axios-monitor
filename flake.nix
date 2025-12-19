@@ -17,6 +17,8 @@
 
           configFile = pkgs.writeText "nix-monitor-config.json" (
             builtins.toJSON {
+              generationsCommand = cfg.generationsCommand;
+              storeSizeCommand = cfg.storeSizeCommand;
               rebuildCommand = cfg.rebuildCommand;
               gcCommand = cfg.gcCommand;
               updateInterval = cfg.updateInterval;
@@ -27,31 +29,50 @@
           options.programs.nix-monitor = {
             enable = mkEnableOption "Nix Monitor plugin for DankMaterialShell";
 
-            rebuildCommand = mkOption {
+            generationsCommand = mkOption {
               type = types.listOf types.str;
               default = [
-                "/usr/bin/bash"
-                "-l"
+                "sh"
                 "-c"
-                "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
+                "nix-env --list-generations --profile /nix/var/nix/profiles/system 2>/dev/null | wc -l"
               ];
-              description = "Command to run for system rebuild";
+              description = "Command to count Nix system generations";
               example = literalExpression ''
-                [ "/usr/bin/bash" "-l" "-c" "nixos-rebuild switch --flake .#hostname" ]
+                [ "sh" "-c" "nix-env --list-generations --profile /nix/var/nix/profiles/system | wc -l" ]
+              '';
+            };
+
+            storeSizeCommand = mkOption {
+              type = types.listOf types.str;
+              default = [
+                "sh"
+                "-c"
+                "du -sh /nix/store 2>/dev/null | cut -f1"
+              ];
+              description = "Command to get Nix store size";
+              example = literalExpression ''
+                [ "sh" "-c" "du -sh /nix/store 2>/dev/null | cut -f1" ]
+              '';
+            };
+
+            rebuildCommand = mkOption {
+              type = types.listOf types.str;
+              description = "Command to run for system rebuild (required)";
+              example = literalExpression ''
+                [ "/usr/bin/bash" "-l" "-c" "cd ~/.config/home-manager && home-manager switch --flake .#home 2>&1" ]
               '';
             };
 
             gcCommand = mkOption {
               type = types.listOf types.str;
               default = [
-                "/usr/bin/bash"
-                "-l"
+                "sh"
                 "-c"
                 "nix-collect-garbage -d 2>&1"
               ];
               description = "Command to run for garbage collection";
               example = literalExpression ''
-                [ "/usr/bin/bash" "-l" "-c" "nix-collect-garbage --delete-older-than 30d" ]
+                [ "/usr/bin/bash" "-l" "-c" "nix-collect-garbage -d" ]
               '';
             };
 
@@ -64,6 +85,13 @@
           };
 
           config = mkIf cfg.enable {
+            assertions = [
+              {
+                assertion = cfg.rebuildCommand != null;
+                message = "programs.nix-monitor.rebuildCommand must be set when nix-monitor is enabled";
+              }
+            ];
+
             home.file.".config/DankMaterialShell/plugins/NixMonitor" = {
               source = self;
               recursive = true;
