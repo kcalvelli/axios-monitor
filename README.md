@@ -35,7 +35,44 @@ Access via DMS Settings → Plugins → Nix Monitor:
 
 ### As a Flake Input
 
-Add to your `flake.nix`. **Note:** The `rebuildCommand` examples below should be customized for your specific setup:
+#### For NixOS System Configuration
+
+Add to your NixOS `configuration.nix` flake:
+
+```nix
+{
+  inputs = {
+    nix-monitor = {
+      url = "github:antonjah/nix-monitor";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = { self, nixpkgs, nix-monitor, ... }: {
+    nixosConfigurations.hostname = nixpkgs.lib.nixosSystem {
+      modules = [
+        nix-monitor.nixosModules.default
+        {
+          services.nix-monitor = {
+            enable = true;
+            user = "youruser";
+            
+            # Required: customize for your setup
+            rebuildCommand = [ 
+              "bash" "-c" 
+              "sudo nixos-rebuild switch --flake .#hostname 2>&1"
+            ];
+          };
+        }
+      ];
+    };
+  };
+}
+```
+
+#### For home-manager Configuration
+
+Add to your home-manager `flake.nix`:
 
 ```nix
 {
@@ -54,13 +91,7 @@ Add to your `flake.nix`. **Note:** The `rebuildCommand` examples below should be
           programs.nix-monitor = {
             enable = true;
             
-            # For NixOS (customize for your setup):
-            rebuildCommand = [ 
-              "bash" "-c" 
-              "sudo nixos-rebuild switch --flake .#hostname 2>&1"
-            ];
-            
-            # Or for home-manager (customize for your setup):
+            # Required: customize for your setup
             rebuildCommand = [ 
               "bash" "-c" 
               "cd ~/.config/home-manager && home-manager switch --flake .#home 2>&1"
@@ -131,15 +162,16 @@ If not overridden, the plugin uses these NixOS defaults:
 - home-manager with flakes vs without flakes
 - System-wide vs user-specific configurations
 
-### NixOS Example (Minimal)
+### NixOS Module Example (Minimal)
 
-Uses all defaults - only rebuildCommand is required:
+Uses all defaults - only rebuildCommand and user are required:
 
 ```nix
-programs.nix-monitor = {
+services.nix-monitor = {
   enable = true;
+  user = "youruser";
   
-  # Only rebuildCommand is required - defaults work for NixOS
+  # Required: customize for your setup
   rebuildCommand = [ 
     "bash" "-c" 
     "sudo nixos-rebuild switch --flake .#hostname 2>&1"
@@ -147,11 +179,12 @@ programs.nix-monitor = {
 };
 ```
 
-### NixOS Example (Full Customization)
+### NixOS Module Example (Full Customization)
 
 ```nix
-programs.nix-monitor = {
+services.nix-monitor = {
   enable = true;
+  user = "youruser";
   
   rebuildCommand = [ 
     "bash" "-c" 
@@ -168,24 +201,21 @@ programs.nix-monitor = {
 };
 ```
 
-### Home-manager Example (Minimal)
+### home-manager Module Example (Minimal)
 
 ```nix
 programs.nix-monitor = {
   enable = true;
   
-  # Track home-manager generations instead of system
-  generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
-  
-  # Required: specify your home-manager rebuild command
+  # Required: customize for your setup
   rebuildCommand = [ 
     "bash" "-c" 
-    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
+    "cd ~/.config/home-manager && home-manager switch --flake .#home 2>&1"
   ];
 };
 ```
 
-### Home-manager Example (Full Customization)
+### home-manager Module Example (Full Customization)
 
 ```nix
 programs.nix-monitor = {
@@ -196,7 +226,7 @@ programs.nix-monitor = {
   
   rebuildCommand = [ 
     "bash" "-c" 
-    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
+    "cd ~/.config/home-manager && home-manager switch --flake .#home 2>&1"
   ];
   
   # Optional: customize other settings
@@ -206,10 +236,28 @@ programs.nix-monitor = {
 
 ### Configuration Options
 
-#### Required
+#### For NixOS Module (`services.nix-monitor`)
+
+**Required:**
+- `user` - Username for which to install the plugin **(REQUIRED for NixOS)**
 - `rebuildCommand` - Command to run for system rebuild **(REQUIRED)**
 
-#### Optional (with defaults)
+**Optional (with defaults):**
+- `generationsCommand` - Command to count system generations  
+  Default: `nix-env --list-generations --profile /nix/var/nix/profiles/system | wc -l`
+- `storeSizeCommand` - Command to get Nix store size  
+  Default: `du -sh /nix/store | cut -f1`
+- `gcCommand` - Command to run for garbage collection  
+  Default: `nix-collect-garbage -d`
+- `updateInterval` - Update interval in seconds  
+  Default: `300` (5 minutes)
+
+#### For home-manager Module (`programs.nix-monitor`)
+
+**Required:**
+- `rebuildCommand` - Command to run for system rebuild **(REQUIRED)**
+
+**Optional (with defaults):**
 - `generationsCommand` - Command to count system generations  
   Default: `nix-env --list-generations --profile /nix/var/nix/profiles/system | wc -l`
 - `storeSizeCommand` - Command to get Nix store size  
