@@ -320,17 +320,7 @@ PluginComponent {
                                 }
                             }
 
-                            DankButton {
-                                width: parent.width
-                                text: "Cancel"
-                                iconName: "cancel"
-                                backgroundColor: Theme.error
-                                textColor: Theme.onError
-                                visible: root.operationRunning
-                                onClicked: {
-                                    root.cancelOperation()
-                                }
-                            }
+
                         }
                     }
 
@@ -376,15 +366,38 @@ PluginComponent {
                             }
                         }
 
-                        DankButton {
-                            text: "Clear"
-                            iconName: "close"
-                            buttonHeight: 30
-                            anchors.right: parent.right
-                            enabled: !root.operationRunning
-                            onClicked: {
-                                root.showConsole = false
-                                root.consoleOutput = ""
+                        Row {
+                            width: parent.width
+                            spacing: Theme.spacingS
+
+                            Item {
+                                width: parent.width - clearButton.width - cancelButton.width - Theme.spacingS * 2
+                                height: 1
+                            }
+
+                            DankButton {
+                                id: cancelButton
+                                text: "Cancel"
+                                iconName: "cancel"
+                                buttonHeight: 30
+                                backgroundColor: Theme.error
+                                textColor: Theme.onError
+                                visible: root.operationRunning
+                                onClicked: {
+                                    root.cancelOperation()
+                                }
+                            }
+
+                            DankButton {
+                                id: clearButton
+                                text: "Clear"
+                                iconName: "close"
+                                buttonHeight: 30
+                                enabled: !root.operationRunning
+                                onClicked: {
+                                    root.showConsole = false
+                                    root.consoleOutput = ""
+                                }
                             }
                         }
                     }
