@@ -57,11 +57,11 @@ Add to your `flake.nix`:
             # Required: specify your rebuild command
             rebuildCommand = [ 
               "/usr/bin/bash" "-l" "-c" 
-              "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
+              "sudo nixos-rebuild switch --flake .#hostname 2>&1"
             ];
             
-            # Optional: customize other commands
-            generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
+            # Optional: customize to track home-manager instead
+            # generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
             
             updateInterval = 300;
           };
@@ -125,42 +125,9 @@ If not overridden, the plugin uses these defaults:
 
 **Note:** `rebuildCommand` has no default and must be explicitly configured.
 
-### Home-manager Example (Minimal)
-
-```nix
-programs.nix-monitor = {
-  enable = true;
-  
-  # Only rebuildCommand is required
-  rebuildCommand = [ 
-    "/usr/bin/bash" "-l" "-c" 
-    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
-  ];
-};
-```
-
-### Home-manager Example (Full Customization)
-
-```nix
-programs.nix-monitor = {
-  enable = true;
-  
-  # Track home-manager generations instead of system generations
-  generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
-  
-  rebuildCommand = [ 
-    "/usr/bin/bash" "-l" "-c" 
-    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
-  ];
-  
-  # Optional: customize other settings
-  updateInterval = 300;
-};
-```
-
 ### NixOS Example (Minimal)
 
-Uses all defaults except rebuildCommand:
+Uses all defaults - only rebuildCommand is required:
 
 ```nix
 programs.nix-monitor = {
@@ -192,6 +159,42 @@ programs.nix-monitor = {
   ];
   
   updateInterval = 600;
+};
+```
+
+### Home-manager Example (Minimal)
+
+```nix
+programs.nix-monitor = {
+  enable = true;
+  
+  # Track home-manager generations instead of system
+  generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
+  
+  # Required: specify your home-manager rebuild command
+  rebuildCommand = [ 
+    "/usr/bin/bash" "-l" "-c" 
+    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
+  ];
+};
+```
+
+### Home-manager Example (Full Customization)
+
+```nix
+programs.nix-monitor = {
+  enable = true;
+  
+  # Track home-manager generations instead of system generations
+  generationsCommand = [ "sh" "-c" "home-manager generations 2>/dev/null | wc -l" ];
+  
+  rebuildCommand = [ 
+    "/usr/bin/bash" "-l" "-c" 
+    "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"
+  ];
+  
+  # Optional: customize other settings
+  updateInterval = 300;
 };
 ```
 
