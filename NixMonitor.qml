@@ -322,7 +322,7 @@ PluginComponent {
 
                             DankButton {
                                 width: parent.width
-                                text: "Cancel Operation"
+                                text: "Cancel"
                                 iconName: "cancel"
                                 backgroundColor: Theme.error
                                 textColor: Theme.onError
