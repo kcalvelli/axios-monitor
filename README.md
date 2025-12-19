@@ -1,6 +1,6 @@
 # Nix Monitor
 
-![](./assets/scrot.png)
+![](./assets/screenshot.png)
 
 A [DankMaterialShell](https://danklinux.com/) plugin for monitoring Nix store disk usage and system generations with integrated system management capabilities.
 
