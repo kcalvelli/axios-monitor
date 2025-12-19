@@ -73,12 +73,14 @@ Add to your `flake.nix`:
 
 ### Activation
 
-1. Rebuild your home-manager configuration or restart DMS
-2. Open DMS Settings → Plugins
-3. Click "Scan for Plugins"
-4. Toggle "Nix Monitor" ON
-5. Add to your DankBar layout
-6. Restart DMS: `dms restart`
+1. Rebuild your home-manager configuration: `home-manager switch --flake .#home`
+2. Restart DMS: `dms restart`
+3. Open DMS Settings → Plugins
+4. Click "Scan for Plugins"
+5. Toggle "Nix Monitor" ON
+6. Add to your DankBar layout
+
+**Note:** After updating the plugin (via `nix flake update nix-monitor`), you must restart DMS to reload the updated QML files. Run `dms restart` after rebuilding your configuration.
 
 ## Usage
 
