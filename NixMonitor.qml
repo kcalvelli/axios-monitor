@@ -27,20 +27,23 @@ PluginComponent {
     property var rebuildCommand: ["/usr/bin/bash", "-l", "-c", "cd ~/.config/home-manager && home-manager switch -b backup --impure --flake .#home 2>&1"]
     property var gcCommand: ["/usr/bin/bash", "-l", "-c", "nix-collect-garbage -d 2>&1"]
 
-    Component.onCompleted: {
-        loadConfig()
-        console.info("Nix Monitor plugin loaded")
-        refreshData()
-    }
+    property string configJsonContent: ""
 
-    function loadConfig() {
-        var configPath = Quickshell.env("HOME") + "/.config/DankMaterialShell/plugins/NixMonitor/config.json"
-        var process = Quickshell.Process.create(["cat", configPath])
+    Process {
+        id: configLoader
+        command: ["cat", Quickshell.env("HOME") + "/.config/DankMaterialShell/plugins/NixMonitor/config.json"]
+        running: false
 
-        process.finished.connect(function(exitCode) {
-            if (exitCode === 0) {
+        stdout: SplitParser {
+            onRead: function(line) {
+                root.configJsonContent += line
+            }
+        }
+
+        onExited: function(exitCode, exitStatus) {
+            if (exitCode === 0 && root.configJsonContent) {
                 try {
-                    var configData = JSON.parse(process.stdout)
+                    var configData = JSON.parse(root.configJsonContent)
                     if (configData.rebuildCommand) {
                         root.rebuildCommand = configData.rebuildCommand
                     }
@@ -55,11 +58,16 @@ PluginComponent {
                 } catch (e) {
                     console.warn("Failed to parse config.json:", e)
                 }
+            } else if (exitCode !== 0) {
+                console.warn("Failed to load config.json, using defaults")
             }
-            process.deleteLater()
-        })
+            root.refreshData()
+        }
+    }
 
-        process.start()
+    Component.onCompleted: {
+        console.info("Nix Monitor plugin loaded")
+        configLoader.running = true
     }
 
     horizontalBarPill: Component {
