@@ -284,7 +284,14 @@ Both NixOS and home-manager modules use the same `programs.nix-monitor` namespac
 - `localRevisionCommand` - Command to get local nixpkgs revision  
   Default: `nixos-version --hash | cut -c 1-7`
 - `remoteRevisionCommand` - Command to get remote nixpkgs revision  
-  Default: `git ls-remote https://github.com/NixOS/nixpkgs.git nixos-unstable | cut -c 1-7`
+  Default: `git ls-remote https://github.com/NixOS/nixpkgs.git nixos-unstable | cut -c 1-7`  
+  **Performance tip:** For faster update checks, use curl with GitHub's API:
+  ```nix
+  remoteRevisionCommand = [
+    "${pkgs.bash}/bin/bash" "-l" "-c"
+    "${pkgs.curl}/bin/curl -s https://api.github.com/repos/NixOS/nixpkgs/git/ref/heads/nixos-unstable 2>/dev/null | ${pkgs.jq}/bin/jq -r '.object.sha' 2>/dev/null | cut -c 1-7 || echo 'N/A'"
+  ];
+  ```
 - `nixpkgsChannel` - NixOS channel to check for updates  
   Default: `nixos-unstable` (Options: `nixos-unstable`, `nixos-24.11`, `nixos-24.05`, `nixos-23.11`)
 
