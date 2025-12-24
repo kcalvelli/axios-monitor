@@ -35,7 +35,8 @@ PluginComponent {
     property var config: null
     property var generationsCommand: ["sh", "-c", "echo 0"]
     property var storeSizeCommand: ["sh", "-c", "echo ..."]
-    property var rebuildCommand: ["sh", "-c", "echo 'No rebuild command configured'"]
+    property var rebuildCommand: ["sh", "-c", "echo 'No rebuild switch command configured'"]
+    property var rebuildBootCommand: ["sh", "-c", "echo 'No rebuild boot command configured'"]
     property var gcCommand: ["sh", "-c", "echo 'No GC command configured'"]
     property var localRevisionCommand: ["sh", "-c", "nixos-version --hash 2>/dev/null | cut -c 1-7 || echo 'N/A'"]
     property var remoteRevisionCommand: ["sh", "-c", "git ls-remote https://github.com/NixOS/nixpkgs.git nixos-unstable 2>/dev/null | cut -c 1-7 || echo 'N/A'"]
@@ -65,6 +66,9 @@ PluginComponent {
                     }
                     if (configData.rebuildCommand) {
                         root.rebuildCommand = configData.rebuildCommand
+                    }
+                    if (configData.rebuildBootCommand) {
+                        root.rebuildBootCommand = configData.rebuildBootCommand
                     }
                     if (configData.gcCommand) {
                         root.gcCommand = configData.gcCommand
@@ -96,7 +100,7 @@ PluginComponent {
     }
 
     Component.onCompleted: {
-        console.info("Nix Monitor plugin loaded")
+        console.info("axiOS Monitor plugin loaded")
         configLoader.running = true
     }
 
@@ -195,7 +199,7 @@ PluginComponent {
     popoutContent: Component {
         PopoutComponent {
             id: popout
-            headerText: "Nix Store Monitor"
+            headerText: "axiOS Monitor"
             detailsText: root.lastUpdate ? "Updated: " + root.lastUpdate : "Loading..."
             showCloseButton: true
 
@@ -405,7 +409,7 @@ PluginComponent {
                                 spacing: Theme.spacingS
 
                                 DankButton {
-                                    width: (parent.width - Theme.spacingS * 2) / 3
+                                    width: (parent.width - Theme.spacingS) / 2
                                     text: "Refresh"
                                     iconName: "refresh"
                                     enabled: !root.isLoading && !root.operationRunning
@@ -415,8 +419,25 @@ PluginComponent {
                                 }
 
                                 DankButton {
-                                    width: (parent.width - Theme.spacingS * 2) / 3
-                                    text: root.operationRunning && root.runningOperation === "rebuild" ? "Building..." : "Rebuild"
+                                    width: (parent.width - Theme.spacingS) / 2
+                                    text: root.operationRunning && root.runningOperation === "gc" ? "Running..." : "GC"
+                                    iconName: "cleaning_services"
+                                    backgroundColor: Theme.error
+                                    textColor: Theme.onError
+                                    enabled: !root.operationRunning
+                                    onClicked: {
+                                        root.runGarbageCollect()
+                                    }
+                                }
+                            }
+
+                            Row {
+                                width: parent.width
+                                spacing: Theme.spacingS
+
+                                DankButton {
+                                    width: (parent.width - Theme.spacingS) / 2
+                                    text: root.operationRunning && root.runningOperation === "rebuild" ? "Building..." : "Rebuild Switch"
                                     iconName: "build"
                                     backgroundColor: Theme.secondary
                                     textColor: Theme.onSecondary
@@ -427,14 +448,14 @@ PluginComponent {
                                 }
 
                                 DankButton {
-                                    width: (parent.width - Theme.spacingS * 2) / 3
-                                    text: root.operationRunning && root.runningOperation === "gc" ? "Running..." : "GC"
-                                    iconName: "cleaning_services"
-                                    backgroundColor: Theme.error
-                                    textColor: Theme.onError
+                                    width: (parent.width - Theme.spacingS) / 2
+                                    text: root.operationRunning && root.runningOperation === "rebuildBoot" ? "Building..." : "Rebuild Boot"
+                                    iconName: "restart_alt"
+                                    backgroundColor: Theme.secondary
+                                    textColor: Theme.onSecondary
                                     enabled: !root.operationRunning
                                     onClicked: {
-                                        root.runGarbageCollect()
+                                        root.rebuildSystemBoot()
                                     }
                                 }
                             }
@@ -610,8 +631,42 @@ PluginComponent {
             root.operationRunning = false
             root.runningOperation = ""
             if (exitCode === 0) {
-                root.consoleOutput += "\n✓ System rebuilt successfully\n"
+                root.consoleOutput += "\n✓ System rebuilt (switch) successfully\n"
                 ToastService.showInfo("System rebuilt successfully")
+                root.refreshData()
+            } else if (exitCode === 143 || exitCode === 130) {
+                root.consoleOutput += "\n✗ Rebuild cancelled by user\n"
+                ToastService.showInfo("Rebuild cancelled")
+            } else {
+                root.consoleOutput += "\n✗ Rebuild failed (exit code: " + exitCode + ")\n"
+                ToastService.showError("Rebuild failed")
+            }
+        }
+    }
+
+    Process {
+        id: rebuildBootProcess
+        command: root.rebuildBootCommand
+        running: false
+
+        stdout: SplitParser {
+            onRead: function(line) {
+                root.consoleOutput += line + "\n"
+            }
+        }
+
+        stderr: SplitParser {
+            onRead: function(line) {
+                root.consoleOutput += line + "\n"
+            }
+        }
+
+        onExited: function(exitCode, exitStatus) {
+            root.operationRunning = false
+            root.runningOperation = ""
+            if (exitCode === 0) {
+                root.consoleOutput += "\n✓ System rebuilt (boot) successfully\n"
+                ToastService.showInfo("System rebuilt for next boot")
                 root.refreshData()
             } else if (exitCode === 143 || exitCode === 130) {
                 root.consoleOutput += "\n✗ Rebuild cancelled by user\n"
@@ -735,9 +790,18 @@ PluginComponent {
         root.operationRunning = true
         root.runningOperation = "rebuild"
         root.showConsole = true
-        root.consoleOutput = "Starting system rebuild...\n"
+        root.consoleOutput = "Starting system rebuild (switch)...\n"
         ToastService.showInfo("Starting system rebuild...")
         rebuildProcess.running = true
+    }
+
+    function rebuildSystemBoot() {
+        root.operationRunning = true
+        root.runningOperation = "rebuildBoot"
+        root.showConsole = true
+        root.consoleOutput = "Starting system rebuild (boot)...\n"
+        ToastService.showInfo("Starting rebuild for next boot...")
+        rebuildBootProcess.running = true
     }
 
     function runGarbageCollect() {
@@ -752,6 +816,9 @@ PluginComponent {
     function cancelOperation() {
         if (root.runningOperation === "rebuild" && rebuildProcess.running) {
             rebuildProcess.running = false
+            root.consoleOutput += "\n✗ Cancelling rebuild...\n"
+        } else if (root.runningOperation === "rebuildBoot" && rebuildBootProcess.running) {
+            rebuildBootProcess.running = false
             root.consoleOutput += "\n✗ Cancelling rebuild...\n"
         } else if (root.runningOperation === "gc" && garbageCollectProcess.running) {
             garbageCollectProcess.running = false
