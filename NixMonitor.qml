@@ -15,7 +15,6 @@ PluginComponent {
     property int gcThresholdGB: pluginData.gcThresholdGB || 50
     property bool checkUpdates: pluginData.checkUpdates !== undefined ? pluginData.checkUpdates : true
     property int updateCheckInterval: pluginData.updateCheckInterval || 3600
-    property string nixpkgsChannel: pluginData.nixpkgsChannel || "nixos-unstable"
 
     property int generationCount: 0
     property string storeSize: "..."
@@ -38,8 +37,8 @@ PluginComponent {
     property var rebuildCommand: ["sh", "-c", "echo 'No rebuild switch command configured'"]
     property var rebuildBootCommand: ["sh", "-c", "echo 'No rebuild boot command configured'"]
     property var gcCommand: ["sh", "-c", "echo 'No GC command configured'"]
-    property var localRevisionCommand: ["sh", "-c", "nixos-version --hash 2>/dev/null | cut -c 1-7 || echo 'N/A'"]
-    property var remoteRevisionCommand: ["sh", "-c", "git ls-remote https://github.com/NixOS/nixpkgs.git nixos-unstable 2>/dev/null | cut -c 1-7 || echo 'N/A'"]
+    property var localRevisionCommand: ["sh", "-c", "echo 'N/A'"]
+    property var remoteRevisionCommand: ["sh", "-c", "echo 'N/A'"]
 
     property string configJsonContent: ""
 
@@ -82,11 +81,6 @@ PluginComponent {
                     }
                     if (configData.remoteRevisionCommand) {
                         root.remoteRevisionCommand = configData.remoteRevisionCommand
-                    }
-                    if (configData.nixpkgsChannel) {
-                        root.nixpkgsChannel = configData.nixpkgsChannel
-                        // Update remote command with the configured channel
-                        root.remoteRevisionCommand = ["sh", "-c", "git ls-remote https://github.com/NixOS/nixpkgs.git " + configData.nixpkgsChannel + " 2>/dev/null | cut -c 1-7 || echo 'N/A'"]
                     }
                     console.info("Loaded custom config:", JSON.stringify(configData))
                 } catch (e) {
@@ -310,7 +304,7 @@ PluginComponent {
                                 }
 
                                 StyledText {
-                                    text: root.canCompareVersions ? (root.isUpToDate ? "Nixpkgs is up to date" : "Nixpkgs update available") : "Could not fetch version info"
+                                    text: root.canCompareVersions ? (root.isUpToDate ? "axiOS is up to date" : "axiOS update available") : "Could not fetch version info"
                                     font.pixelSize: Theme.fontSizeMedium
                                     font.weight: Font.Bold
                                     color: Theme.surfaceText
@@ -343,7 +337,7 @@ PluginComponent {
                                     spacing: Theme.spacingXXS
 
                                     StyledText {
-                                        text: "Remote (" + root.nixpkgsChannel + "):"
+                                        text: "Remote (master):"
                                         font.pixelSize: Theme.fontSizeSmall
                                         color: Theme.surfaceVariantText
                                     }
@@ -563,7 +557,7 @@ PluginComponent {
         interval: root.updateCheckInterval * 1000
         running: root.checkUpdates
         repeat: true
-        onTriggered: root.checkNixpkgsUpdates()
+        onTriggered: root.checkAxiosUpdates()
     }
 
     Process {
@@ -763,11 +757,11 @@ PluginComponent {
         generationCountProcess.running = true
         storeSizeProcess.running = true
         if (root.checkUpdates) {
-            root.checkNixpkgsUpdates()
+            root.checkAxiosUpdates()
         }
     }
 
-    function checkNixpkgsUpdates() {
+    function checkAxiosUpdates() {
         if (!root.isCheckingUpdates) {
             root.isCheckingUpdates = true
             localRevisionProcess.running = true

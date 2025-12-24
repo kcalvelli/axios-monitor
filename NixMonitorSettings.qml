@@ -5,11 +5,11 @@ import qs.Widgets
 
 PluginSettings {
     id: root
-    pluginId: "nixMonitor"
+    pluginId: "axiosMonitor"
 
     StyledText {
         width: parent.width
-        text: "Nix Monitor Settings"
+        text: "axiOS Monitor Settings"
         font.pixelSize: Theme.fontSizeLarge
         font.weight: Font.Bold
         color: Theme.surfaceText
@@ -17,7 +17,7 @@ PluginSettings {
 
     StyledText {
         width: parent.width
-        text: "Configure monitoring and cleanup options for your Nix store and home-manager generations"
+        text: "Configure monitoring and cleanup options for your axiOS system"
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.surfaceVariantText
         wrapMode: Text.WordWrap
@@ -86,7 +86,7 @@ PluginSettings {
 
     StyledText {
         width: parent.width
-        text: "NixOS Update Checking"
+        text: "axiOS Update Checking"
         font.pixelSize: Theme.fontSizeMedium
         font.weight: Font.Bold
         color: Theme.surfaceText
@@ -96,27 +96,14 @@ PluginSettings {
     ToggleSetting {
         settingKey: "checkUpdates"
         label: "Check for Updates"
-        description: "Monitor nixpkgs for available updates"
+        description: "Monitor axiOS for available updates"
         defaultValue: true
-    }
-
-    DropdownSetting {
-        settingKey: "nixpkgsChannel"
-        label: "NixOS Channel"
-        description: "Which channel to check for updates"
-        defaultValue: "nixos-unstable"
-        options: [
-            { value: "nixos-unstable", label: "nixos-unstable" },
-            { value: "nixos-24.11", label: "nixos-24.11" },
-            { value: "nixos-24.05", label: "nixos-24.05" },
-            { value: "nixos-23.11", label: "nixos-23.11" }
-        ]
     }
 
     SliderSetting {
         settingKey: "updateCheckInterval"
         label: "Update Check Interval"
-        description: "How often to check for nixpkgs updates"
+        description: "How often to check for axiOS updates"
         defaultValue: 3600
         minimum: 300
         maximum: 86400
