@@ -44,7 +44,7 @@ PluginComponent {
 
     Process {
         id: configLoader
-        command: ["cat", Quickshell.env("HOME") + "/.config/DankMaterialShell/plugins/NixMonitor/config.json"]
+        command: ["cat", Quickshell.env("HOME") + "/.config/DankMaterialShell/plugins/AxiosMonitor/config.json"]
         running: false
 
         stdout: SplitParser {

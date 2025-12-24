@@ -1,10 +1,10 @@
 {
-  description = "Nix Monitor - A DankMaterialShell plugin for monitoring Nix store and home-manager generations";
+  description = "axiOS Monitor - A DankMaterialShell plugin for monitoring axiOS systems";
 
   outputs =
     { self, ... }:
     let
-      mkNixMonitorModule =
+      mkAxiosMonitorModule =
         {
           isNixOS ? false,
         }:
@@ -16,24 +16,24 @@
         }:
         with lib;
         let
-          cfg = config.programs.nix-monitor;
+          cfg = config.programs.axios-monitor;
 
-          configFile = pkgs.writeText "nix-monitor-config.json" (
+          configFile = pkgs.writeText "axios-monitor-config.json" (
             builtins.toJSON {
               generationsCommand = cfg.generationsCommand;
               storeSizeCommand = cfg.storeSizeCommand;
               rebuildCommand = cfg.rebuildCommand;
+              rebuildBootCommand = cfg.rebuildBootCommand;
               gcCommand = cfg.gcCommand;
               updateInterval = cfg.updateInterval;
               localRevisionCommand = cfg.localRevisionCommand;
               remoteRevisionCommand = cfg.remoteRevisionCommand;
-              nixpkgsChannel = cfg.nixpkgsChannel;
             }
           );
         in
         {
-          options.programs.nix-monitor = {
-            enable = mkEnableOption "Nix Monitor plugin for DankMaterialShell";
+          options.programs.axios-monitor = {
+            enable = mkEnableOption "axiOS Monitor plugin for DankMaterialShell";
 
             generationsCommand = mkOption {
               type = types.listOf types.str;
@@ -63,9 +63,17 @@
 
             rebuildCommand = mkOption {
               type = types.listOf types.str;
-              description = "Command to run for system rebuild (required)";
+              description = "Command to run for system rebuild switch (required)";
               example = literalExpression ''
                 [ "bash" "-c" "sudo nixos-rebuild switch --flake .#hostname 2>&1" ]
+              '';
+            };
+
+            rebuildBootCommand = mkOption {
+              type = types.listOf types.str;
+              description = "Command to run for system rebuild boot (required)";
+              example = literalExpression ''
+                [ "bash" "-c" "sudo nixos-rebuild boot --flake .#hostname 2>&1" ]
               '';
             };
 
@@ -91,35 +99,18 @@
 
             localRevisionCommand = mkOption {
               type = types.listOf types.str;
-              default = [
-                "sh"
-                "-c"
-                "nixos-version --hash 2>/dev/null | cut -c 1-7 || echo 'N/A'"
-              ];
-              description = "Command to get local nixpkgs revision";
+              description = "Command to get local axiOS revision from flake.lock";
               example = literalExpression ''
-                [ "sh" "-c" "nixos-version --hash | cut -c 1-7" ]
+                [ "sh" "-c" "jq -r '.nodes.axios.locked.rev' ~/.config/nixos_config/flake.lock | cut -c 1-7" ]
               '';
             };
 
             remoteRevisionCommand = mkOption {
               type = types.listOf types.str;
-              default = [
-                "sh"
-                "-c"
-                "git ls-remote https://github.com/NixOS/nixpkgs.git nixos-unstable 2>/dev/null | cut -c 1-7 || echo 'N/A'"
-              ];
-              description = "Command to get remote nixpkgs revision";
+              description = "Command to get remote axiOS revision from GitHub";
               example = literalExpression ''
-                [ "sh" "-c" "git ls-remote https://github.com/NixOS/nixpkgs.git nixos-24.11 | cut -c 1-7" ]
+                [ "sh" "-c" "git ls-remote https://github.com/kcalvelli/axios.git master | cut -c 1-7" ]
               '';
-            };
-
-            nixpkgsChannel = mkOption {
-              type = types.str;
-              default = "nixos-unstable";
-              description = "NixOS channel to check for updates";
-              example = "nixos-24.11";
             };
           };
 
@@ -128,29 +119,41 @@
               assertions = [
                 {
                   assertion = cfg.rebuildCommand != null;
-                  message = "programs.nix-monitor.rebuildCommand must be set when nix-monitor is enabled";
+                  message = "programs.axios-monitor.rebuildCommand must be set when axios-monitor is enabled";
+                }
+                {
+                  assertion = cfg.rebuildBootCommand != null;
+                  message = "programs.axios-monitor.rebuildBootCommand must be set when axios-monitor is enabled";
+                }
+                {
+                  assertion = cfg.localRevisionCommand != null;
+                  message = "programs.axios-monitor.localRevisionCommand must be set when axios-monitor is enabled";
+                }
+                {
+                  assertion = cfg.remoteRevisionCommand != null;
+                  message = "programs.axios-monitor.remoteRevisionCommand must be set when axios-monitor is enabled";
                 }
               ];
             }
             (
               if isNixOS then
                 {
-                  environment.etc."xdg/quickshell/dms-plugins/NixMonitor" = {
+                  environment.etc."xdg/quickshell/dms-plugins/AxiosMonitor" = {
                     source = self;
                   };
 
-                  environment.etc."xdg/quickshell/dms-plugins/NixMonitor/config.json" = {
+                  environment.etc."xdg/quickshell/dms-plugins/AxiosMonitor/config.json" = {
                     source = configFile;
                   };
                 }
               else
                 {
-                  home.file.".config/DankMaterialShell/plugins/NixMonitor" = {
+                  home.file.".config/DankMaterialShell/plugins/AxiosMonitor" = {
                     source = self;
                     recursive = true;
                   };
 
-                  home.file.".config/DankMaterialShell/plugins/NixMonitor/config.json" = {
+                  home.file.".config/DankMaterialShell/plugins/AxiosMonitor/config.json" = {
                     source = configFile;
                   };
                 }
@@ -159,9 +162,9 @@
         };
     in
     {
-      homeManagerModules.default = mkNixMonitorModule { isNixOS = false; };
+      homeManagerModules.default = mkAxiosMonitorModule { isNixOS = false; };
 
-      nixosModules.default = mkNixMonitorModule { isNixOS = true; };
+      nixosModules.default = mkAxiosMonitorModule { isNixOS = true; };
 
       dmsPlugin = self;
     };
