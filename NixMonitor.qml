@@ -39,6 +39,7 @@ PluginComponent {
     property var gcCommand: ["sh", "-c", "echo 'No GC command configured'"]
     property var localRevisionCommand: ["sh", "-c", "echo 'N/A'"]
     property var remoteRevisionCommand: ["sh", "-c", "echo 'N/A'"]
+    property var updateFlakeCommand: ["sh", "-c", "echo 'No update flake command configured'"]
 
     property string configJsonContent: ""
 
@@ -81,6 +82,9 @@ PluginComponent {
                     }
                     if (configData.remoteRevisionCommand) {
                         root.remoteRevisionCommand = configData.remoteRevisionCommand
+                    }
+                    if (configData.updateFlakeCommand) {
+                        root.updateFlakeCommand = configData.updateFlakeCommand
                     }
                     console.info("Loaded custom config:", JSON.stringify(configData))
                 } catch (e) {
@@ -430,8 +434,20 @@ PluginComponent {
                                 spacing: Theme.spacingS
 
                                 DankButton {
-                                    width: (parent.width - Theme.spacingS) / 2
-                                    text: root.operationRunning && root.runningOperation === "rebuild" ? "Building..." : "Rebuild Switch"
+                                    width: (parent.width - Theme.spacingS * 2) / 3
+                                    text: root.operationRunning && root.runningOperation === "updateFlake" ? "Updating..." : "Update"
+                                    iconName: "download"
+                                    backgroundColor: Theme.tertiary
+                                    textColor: Theme.onTertiary
+                                    enabled: !root.operationRunning
+                                    onClicked: {
+                                        root.updateFlake()
+                                    }
+                                }
+
+                                DankButton {
+                                    width: (parent.width - Theme.spacingS * 2) / 3
+                                    text: root.operationRunning && root.runningOperation === "rebuild" ? "Building..." : "Switch"
                                     iconName: "build"
                                     backgroundColor: Theme.secondary
                                     textColor: Theme.onSecondary
@@ -442,8 +458,8 @@ PluginComponent {
                                 }
 
                                 DankButton {
-                                    width: (parent.width - Theme.spacingS) / 2
-                                    text: root.operationRunning && root.runningOperation === "rebuildBoot" ? "Building..." : "Rebuild Boot"
+                                    width: (parent.width - Theme.spacingS * 2) / 3
+                                    text: root.operationRunning && root.runningOperation === "rebuildBoot" ? "Building..." : "Boot"
                                     iconName: "restart_alt"
                                     backgroundColor: Theme.secondary
                                     textColor: Theme.onSecondary
@@ -673,6 +689,40 @@ PluginComponent {
     }
 
     Process {
+        id: updateFlakeProcess
+        command: root.updateFlakeCommand
+        running: false
+
+        stdout: SplitParser {
+            onRead: function(line) {
+                root.consoleOutput += line + "\n"
+            }
+        }
+
+        stderr: SplitParser {
+            onRead: function(line) {
+                root.consoleOutput += line + "\n"
+            }
+        }
+
+        onExited: function(exitCode, exitStatus) {
+            root.operationRunning = false
+            root.runningOperation = ""
+            if (exitCode === 0) {
+                root.consoleOutput += "\n✓ Flake updated successfully\n"
+                ToastService.showInfo("Flake updated successfully")
+                root.checkForUpdates()
+            } else if (exitCode === 143 || exitCode === 130) {
+                root.consoleOutput += "\n✗ Update cancelled by user\n"
+                ToastService.showInfo("Update cancelled")
+            } else {
+                root.consoleOutput += "\n✗ Update failed (exit code: " + exitCode + ")\n"
+                ToastService.showError("Update failed")
+            }
+        }
+    }
+
+    Process {
         id: garbageCollectProcess
         command: root.gcCommand
         running: false
@@ -798,6 +848,15 @@ PluginComponent {
         rebuildBootProcess.running = true
     }
 
+    function updateFlake() {
+        root.operationRunning = true
+        root.runningOperation = "updateFlake"
+        root.showConsole = true
+        root.consoleOutput = "Updating flake.lock...\n"
+        ToastService.showInfo("Updating flake...")
+        updateFlakeProcess.running = true
+    }
+
     function runGarbageCollect() {
         root.operationRunning = true
         root.runningOperation = "gc"
@@ -814,6 +873,9 @@ PluginComponent {
         } else if (root.runningOperation === "rebuildBoot" && rebuildBootProcess.running) {
             rebuildBootProcess.running = false
             root.consoleOutput += "\n✗ Cancelling rebuild...\n"
+        } else if (root.runningOperation === "updateFlake" && updateFlakeProcess.running) {
+            updateFlakeProcess.running = false
+            root.consoleOutput += "\n✗ Cancelling flake update...\n"
         } else if (root.runningOperation === "gc" && garbageCollectProcess.running) {
             garbageCollectProcess.running = false
             root.consoleOutput += "\n✗ Cancelling garbage collection...\n"

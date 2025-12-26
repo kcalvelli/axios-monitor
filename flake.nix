@@ -28,6 +28,7 @@
               updateInterval = cfg.updateInterval;
               localRevisionCommand = cfg.localRevisionCommand;
               remoteRevisionCommand = cfg.remoteRevisionCommand;
+              updateFlakeCommand = cfg.updateFlakeCommand;
             }
           );
 
@@ -123,6 +124,14 @@
                 [ "sh" "-c" "git ls-remote https://github.com/kcalvelli/axios.git master | cut -c 1-7" ]
               '';
             };
+
+            updateFlakeCommand = mkOption {
+              type = types.listOf types.str;
+              description = "Command to update the flake.lock file (required)";
+              example = literalExpression ''
+                [ "bash" "-c" "nix flake update --flake ~/.config/nixos_config 2>&1" ]
+              '';
+            };
           };
 
           config = mkIf cfg.enable (mkMerge [
@@ -143,6 +152,10 @@
                 {
                   assertion = cfg.remoteRevisionCommand != null;
                   message = "programs.axios-monitor.remoteRevisionCommand must be set when axios-monitor is enabled";
+                }
+                {
+                  assertion = cfg.updateFlakeCommand != null;
+                  message = "programs.axios-monitor.updateFlakeCommand must be set when axios-monitor is enabled";
                 }
               ];
             }
