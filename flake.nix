@@ -75,17 +75,33 @@
 
             rebuildCommand = mkOption {
               type = types.listOf types.str;
-              description = "Command to run for system rebuild switch (required)";
+              default = [
+                "bash"
+                "-c"
+                ''
+                  FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
+                  pkexec nixos-rebuild switch --flake "$FLAKE_PATH#$(hostname)" 2>&1
+                ''
+              ];
+              description = "Command to run for system rebuild switch";
               example = literalExpression ''
-                [ "bash" "-c" "sudo nixos-rebuild switch --flake .#hostname 2>&1" ]
+                [ "bash" "-c" "pkexec nixos-rebuild switch --flake ~/.config/nixos_config#hostname 2>&1" ]
               '';
             };
 
             rebuildBootCommand = mkOption {
               type = types.listOf types.str;
-              description = "Command to run for system rebuild boot (required)";
+              default = [
+                "bash"
+                "-c"
+                ''
+                  FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
+                  pkexec nixos-rebuild boot --flake "$FLAKE_PATH#$(hostname)" 2>&1
+                ''
+              ];
+              description = "Command to run for system rebuild boot";
               example = literalExpression ''
-                [ "bash" "-c" "sudo nixos-rebuild boot --flake .#hostname 2>&1" ]
+                [ "bash" "-c" "pkexec nixos-rebuild boot --flake ~/.config/nixos_config#hostname 2>&1" ]
               '';
             };
 
@@ -111,6 +127,14 @@
 
             localRevisionCommand = mkOption {
               type = types.listOf types.str;
+              default = [
+                "bash"
+                "-c"
+                ''
+                  FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
+                  jq -r '.nodes.axios.locked.rev // "N/A"' "$FLAKE_PATH/flake.lock" 2>/dev/null | cut -c 1-7 || echo 'N/A'
+                ''
+              ];
               description = "Command to get local axiOS revision from flake.lock";
               example = literalExpression ''
                 [ "sh" "-c" "jq -r '.nodes.axios.locked.rev' ~/.config/nixos_config/flake.lock | cut -c 1-7" ]
@@ -119,6 +143,11 @@
 
             remoteRevisionCommand = mkOption {
               type = types.listOf types.str;
+              default = [
+                "bash"
+                "-c"
+                "git ls-remote https://github.com/kcalvelli/axios.git master 2>/dev/null | cut -c 1-7 || echo 'N/A'"
+              ];
               description = "Command to get remote axiOS revision from GitHub";
               example = literalExpression ''
                 [ "sh" "-c" "git ls-remote https://github.com/kcalvelli/axios.git master | cut -c 1-7" ]
@@ -127,7 +156,15 @@
 
             updateFlakeCommand = mkOption {
               type = types.listOf types.str;
-              description = "Command to update the flake.lock file (required)";
+              default = [
+                "bash"
+                "-c"
+                ''
+                  FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
+                  nix flake update --flake "$FLAKE_PATH" 2>&1
+                ''
+              ];
+              description = "Command to update the flake.lock file";
               example = literalExpression ''
                 [ "bash" "-c" "nix flake update --flake ~/.config/nixos_config 2>&1" ]
               '';
@@ -135,30 +172,6 @@
           };
 
           config = mkIf cfg.enable (mkMerge [
-            {
-              assertions = [
-                {
-                  assertion = cfg.rebuildCommand != null;
-                  message = "programs.axios-monitor.rebuildCommand must be set when axios-monitor is enabled";
-                }
-                {
-                  assertion = cfg.rebuildBootCommand != null;
-                  message = "programs.axios-monitor.rebuildBootCommand must be set when axios-monitor is enabled";
-                }
-                {
-                  assertion = cfg.localRevisionCommand != null;
-                  message = "programs.axios-monitor.localRevisionCommand must be set when axios-monitor is enabled";
-                }
-                {
-                  assertion = cfg.remoteRevisionCommand != null;
-                  message = "programs.axios-monitor.remoteRevisionCommand must be set when axios-monitor is enabled";
-                }
-                {
-                  assertion = cfg.updateFlakeCommand != null;
-                  message = "programs.axios-monitor.updateFlakeCommand must be set when axios-monitor is enabled";
-                }
-              ];
-            }
             (
               if isNixOS then
                 {
