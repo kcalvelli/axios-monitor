@@ -2,7 +2,7 @@
   description = "axiOS Monitor - A DankMaterialShell plugin for monitoring axiOS systems";
 
   outputs =
-    { self, ... }:
+    { self, nixpkgs, ... }:
     let
       mkAxiosMonitorModule =
         {
@@ -30,6 +30,17 @@
               remoteRevisionCommand = cfg.remoteRevisionCommand;
             }
           );
+
+          # Build a complete plugin directory with all files including config.json
+          pluginDir = pkgs.runCommand "axios-monitor-plugin" { } ''
+            mkdir -p $out
+            # Copy all plugin files from source
+            cp -r ${self}/* $out/
+            # Add the generated config.json
+            cp ${configFile} $out/config.json
+            # Make everything readable
+            chmod -R +r $out
+          '';
         in
         {
           options.programs.axios-monitor = {
@@ -139,22 +150,14 @@
               if isNixOS then
                 {
                   environment.etc."xdg/quickshell/dms-plugins/AxiosMonitor" = {
-                    source = self;
-                  };
-
-                  environment.etc."xdg/quickshell/dms-plugins/AxiosMonitor/config.json" = {
-                    source = configFile;
+                    source = pluginDir;
                   };
                 }
               else
                 {
                   home.file.".config/DankMaterialShell/plugins/AxiosMonitor" = {
-                    source = self;
+                    source = pluginDir;
                     recursive = true;
-                  };
-
-                  home.file.".config/DankMaterialShell/plugins/AxiosMonitor/config.json" = {
-                    source = configFile;
                   };
                 }
             )
