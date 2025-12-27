@@ -437,8 +437,8 @@ PluginComponent {
                                     width: (parent.width - Theme.spacingS * 2) / 3
                                     text: root.operationRunning && root.runningOperation === "updateFlake" ? "Updating..." : "Update"
                                     iconName: "download"
-                                    backgroundColor: Theme.tertiary
-                                    textColor: Theme.onTertiary
+                                    backgroundColor: Theme.primary
+                                    textColor: Theme.onPrimary
                                     enabled: !root.operationRunning
                                     onClicked: {
                                         root.updateFlake()

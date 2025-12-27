@@ -52,11 +52,11 @@
               default = [
                 "sh"
                 "-c"
-                "nix-env --list-generations --profile /nix/var/nix/profiles/system 2>/dev/null | wc -l"
+                "ls -d /nix/var/nix/profiles/system-*-link 2>/dev/null | wc -l"
               ];
               description = "Command to count Nix system generations";
               example = literalExpression ''
-                [ "sh" "-c" "nix-env --list-generations --profile /nix/var/nix/profiles/system | wc -l" ]
+                [ "sh" "-c" "ls -d /nix/var/nix/profiles/system-*-link 2>/dev/null | wc -l" ]
               '';
             };
 
@@ -110,13 +110,20 @@
             gcCommand = mkOption {
               type = types.listOf types.str;
               default = [
-                "sh"
+                "bash"
                 "-c"
-                "nix-collect-garbage -d 2>&1"
+                ''
+                  export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass
+                  echo "Running system-level garbage collection..."
+                  sudo -A nix-collect-garbage -d 2>&1
+                  echo ""
+                  echo "Running user-level garbage collection..."
+                  nix-collect-garbage -d 2>&1
+                ''
               ];
-              description = "Command to run for garbage collection";
+              description = "Command to run for garbage collection at both system and user level";
               example = literalExpression ''
-                [ "bash" "-c" "nix-collect-garbage -d 2>&1" ]
+                [ "bash" "-c" "export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass; sudo -A nix-collect-garbage -d && nix-collect-garbage -d 2>&1" ]
               '';
             };
 
