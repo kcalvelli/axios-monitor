@@ -80,7 +80,7 @@
                 "-c"
                 ''
                   FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
-                  pkexec nixos-rebuild switch --flake "$FLAKE_PATH#$(hostname)" 2>&1
+                  pkexec sh -c "git config --global --add safe.directory '$FLAKE_PATH' 2>/dev/null; nixos-rebuild switch --flake '$FLAKE_PATH#$(hostname)' 2>&1"
                 ''
               ];
               description = "Command to run for system rebuild switch";
@@ -96,7 +96,7 @@
                 "-c"
                 ''
                   FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
-                  pkexec nixos-rebuild boot --flake "$FLAKE_PATH#$(hostname)" 2>&1
+                  pkexec sh -c "git config --global --add safe.directory '$FLAKE_PATH' 2>/dev/null; nixos-rebuild boot --flake '$FLAKE_PATH#$(hostname)' 2>&1"
                 ''
               ];
               description = "Command to run for system rebuild boot";
