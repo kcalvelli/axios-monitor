@@ -80,12 +80,12 @@
                 "-c"
                 ''
                   FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
-                  pkexec sh -c "git config --global --add safe.directory '$FLAKE_PATH' 2>/dev/null; nixos-rebuild switch --flake '$FLAKE_PATH#$(hostname)' 2>&1"
+                  sudo -A nixos-rebuild switch --flake "$FLAKE_PATH#$(hostname)" 2>&1
                 ''
               ];
               description = "Command to run for system rebuild switch";
               example = literalExpression ''
-                [ "bash" "-c" "pkexec nixos-rebuild switch --flake ~/.config/nixos_config#hostname 2>&1" ]
+                [ "bash" "-c" "sudo -A nixos-rebuild switch --flake ~/.config/nixos_config#hostname 2>&1" ]
               '';
             };
 
@@ -96,12 +96,12 @@
                 "-c"
                 ''
                   FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
-                  pkexec sh -c "git config --global --add safe.directory '$FLAKE_PATH' 2>/dev/null; nixos-rebuild boot --flake '$FLAKE_PATH#$(hostname)' 2>&1"
+                  sudo -A nixos-rebuild boot --flake "$FLAKE_PATH#$(hostname)" 2>&1
                 ''
               ];
               description = "Command to run for system rebuild boot";
               example = literalExpression ''
-                [ "bash" "-c" "pkexec nixos-rebuild boot --flake ~/.config/nixos_config#hostname 2>&1" ]
+                [ "bash" "-c" "sudo -A nixos-rebuild boot --flake ~/.config/nixos_config#hostname 2>&1" ]
               '';
             };
 
