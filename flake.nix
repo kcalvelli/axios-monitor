@@ -79,14 +79,14 @@
                 "bash"
                 "-c"
                 ''
-                  export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass
+                  export SUDO_ASKPASS=${pkgs.lxqt.lxqt-openssh-askpass}/bin/lxqt-openssh-askpass
                   FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
                   sudo -A nixos-rebuild switch --flake "$FLAKE_PATH#$(hostname)" 2>&1
                 ''
               ];
               description = "Command to run for system rebuild switch";
               example = literalExpression ''
-                [ "bash" "-c" "export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass; sudo -A nixos-rebuild switch --flake ~/.config/nixos_config#hostname 2>&1" ]
+                [ "bash" "-c" "export SUDO_ASKPASS=\$(which lxqt-openssh-askpass); sudo -A nixos-rebuild switch --flake ~/.config/nixos_config#hostname 2>&1" ]
               '';
             };
 
@@ -96,14 +96,14 @@
                 "bash"
                 "-c"
                 ''
-                  export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass
+                  export SUDO_ASKPASS=${pkgs.lxqt.lxqt-openssh-askpass}/bin/lxqt-openssh-askpass
                   FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
                   sudo -A nixos-rebuild boot --flake "$FLAKE_PATH#$(hostname)" 2>&1
                 ''
               ];
               description = "Command to run for system rebuild boot";
               example = literalExpression ''
-                [ "bash" "-c" "export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass; sudo -A nixos-rebuild boot --flake ~/.config/nixos_config#hostname 2>&1" ]
+                [ "bash" "-c" "export SUDO_ASKPASS=\$(which lxqt-openssh-askpass); sudo -A nixos-rebuild boot --flake ~/.config/nixos_config#hostname 2>&1" ]
               '';
             };
 
@@ -113,7 +113,7 @@
                 "bash"
                 "-c"
                 ''
-                  export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass
+                  export SUDO_ASKPASS=${pkgs.lxqt.lxqt-openssh-askpass}/bin/lxqt-openssh-askpass
                   echo "Running system-level garbage collection..."
                   sudo -A nix-collect-garbage -d 2>&1
                   echo ""
@@ -123,7 +123,7 @@
               ];
               description = "Command to run for garbage collection at both system and user level";
               example = literalExpression ''
-                [ "bash" "-c" "export SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass; sudo -A nix-collect-garbage -d && nix-collect-garbage -d 2>&1" ]
+                [ "bash" "-c" "export SUDO_ASKPASS=\$(which lxqt-openssh-askpass); sudo -A nix-collect-garbage -d && nix-collect-garbage -d 2>&1" ]
               '';
             };
 

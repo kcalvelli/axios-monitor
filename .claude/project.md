@@ -83,7 +83,7 @@ Unlike generic nix-monitor, this fork includes:
 2. **axiOS Version Tracking**: Monitors `axios` flake input instead of nixpkgs
 3. **Zero Configuration**: Auto-configured when using axiOS desktop module
 4. **Smart Flake Detection**: Uses `$FLAKE_PATH` or defaults to `~/.config/nixos_config`
-5. **GUI Password Prompts**: Uses `sudo -A` with `SUDO_ASKPASS=/run/current-system/sw/bin/ksshaskpass`
+5. **GUI Password Prompts**: Uses `sudo -A` with `SUDO_ASKPASS` pointing to `lxqt-openssh-askpass`
 
 ## File Structure
 
@@ -172,7 +172,7 @@ All processes capture stdout/stderr and display in the console output.
 - bash (for command execution)
 - git (for update checking)
 - jq (for parsing flake.lock)
-- ksshaskpass (for GUI password prompts)
+- lxqt-openssh-askpass (for GUI password prompts)
 
 ### QML Imports
 - QtQuick - Core QML module
