@@ -5,11 +5,11 @@ import qs.Widgets
 
 PluginSettings {
     id: root
-    pluginId: "axiosMonitor"
+    pluginId: "cairnMonitor"
 
     StyledText {
         width: parent.width
-        text: "axiOS Monitor Settings"
+        text: "Cairn Monitor Settings"
         font.pixelSize: Theme.fontSizeLarge
         font.weight: Font.Bold
         color: Theme.surfaceText
@@ -17,7 +17,7 @@ PluginSettings {
 
     StyledText {
         width: parent.width
-        text: "Configure monitoring and cleanup options for your axiOS system"
+        text: "Configure monitoring and cleanup options for your Cairn system"
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.surfaceVariantText
         wrapMode: Text.WordWrap
@@ -86,7 +86,7 @@ PluginSettings {
 
     StyledText {
         width: parent.width
-        text: "axiOS Update Checking"
+        text: "Cairn Update Checking"
         font.pixelSize: Theme.fontSizeMedium
         font.weight: Font.Bold
         color: Theme.surfaceText
@@ -96,14 +96,14 @@ PluginSettings {
     ToggleSetting {
         settingKey: "checkUpdates"
         label: "Check for Updates"
-        description: "Monitor axiOS for available updates"
+        description: "Monitor Cairn for available updates"
         defaultValue: true
     }
 
     SliderSetting {
         settingKey: "updateCheckInterval"
         label: "Update Check Interval"
-        description: "How often to check for axiOS updates"
+        description: "How often to check for Cairn updates"
         defaultValue: 3600
         minimum: 300
         maximum: 86400

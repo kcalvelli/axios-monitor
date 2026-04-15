@@ -1,7 +1,7 @@
 {
-  "id": "axiosMonitor",
-  "name": "axiOS Monitor",
-  "description": "Monitor axiOS system status, generations, and Nix store usage with integrated rebuild and update capabilities",
+  "id": "cairnMonitor",
+  "name": "Cairn Monitor",
+  "description": "Monitor Cairn system status, generations, and Nix store usage with integrated rebuild and update capabilities",
   "version": "2.0.0",
   "author": "Keith Calvelli (based on Nix Monitor by Anton Andersson)",
   "icon": "inventory_2",

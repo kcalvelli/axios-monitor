@@ -1,10 +1,10 @@
 {
-  description = "axiOS Monitor - A DankMaterialShell plugin for monitoring axiOS systems";
+  description = "Cairn Monitor - A DankMaterialShell plugin for monitoring Cairn systems";
 
   outputs =
     { self, nixpkgs, ... }:
     let
-      mkAxiosMonitorModule =
+      mkCairnMonitorModule =
         {
           isNixOS ? false,
         }:
@@ -16,9 +16,9 @@
         }:
         with lib;
         let
-          cfg = config.programs.axios-monitor;
+          cfg = config.programs.cairn-monitor;
 
-          configFile = pkgs.writeText "axios-monitor-config.json" (
+          configFile = pkgs.writeText "cairn-monitor-config.json" (
             builtins.toJSON {
               generationsCommand = cfg.generationsCommand;
               storeSizeCommand = cfg.storeSizeCommand;
@@ -33,7 +33,7 @@
           );
 
           # Build a complete plugin directory with all files including config.json
-          pluginDir = pkgs.runCommand "axios-monitor-plugin" { } ''
+          pluginDir = pkgs.runCommand "cairn-monitor-plugin" { } ''
             mkdir -p $out
             # Copy all plugin files from source
             cp -r ${self}/* $out/
@@ -44,8 +44,8 @@
           '';
         in
         {
-          options.programs.axios-monitor = {
-            enable = mkEnableOption "axiOS Monitor plugin for DankMaterialShell";
+          options.programs.cairn-monitor = {
+            enable = mkEnableOption "Cairn Monitor plugin for DankMaterialShell";
 
             generationsCommand = mkOption {
               type = types.listOf types.str;
@@ -141,12 +141,12 @@
                 "-c"
                 ''
                   FLAKE_PATH=''${FLAKE_PATH:-$HOME/.config/nixos_config}
-                  jq -r '.nodes.axios.locked.rev // "N/A"' "$FLAKE_PATH/flake.lock" 2>/dev/null | cut -c 1-7 || echo 'N/A'
+                  jq -r '.nodes.cairn.locked.rev // "N/A"' "$FLAKE_PATH/flake.lock" 2>/dev/null | cut -c 1-7 || echo 'N/A'
                 ''
               ];
-              description = "Command to get local axiOS revision from flake.lock";
+              description = "Command to get local Cairn revision from flake.lock";
               example = literalExpression ''
-                [ "sh" "-c" "jq -r '.nodes.axios.locked.rev' ~/.config/nixos_config/flake.lock | cut -c 1-7" ]
+                [ "sh" "-c" "jq -r '.nodes.cairn.locked.rev' ~/.config/nixos_config/flake.lock | cut -c 1-7" ]
               '';
             };
 
@@ -155,11 +155,11 @@
               default = [
                 "bash"
                 "-c"
-                "git ls-remote https://github.com/kcalvelli/axios.git master 2>/dev/null | cut -c 1-7 || echo 'N/A'"
+                "git ls-remote https://github.com/kcalvelli/cairn.git master 2>/dev/null | cut -c 1-7 || echo 'N/A'"
               ];
-              description = "Command to get remote axiOS revision from GitHub";
+              description = "Command to get remote Cairn revision from GitHub";
               example = literalExpression ''
-                [ "sh" "-c" "git ls-remote https://github.com/kcalvelli/axios.git master | cut -c 1-7" ]
+                [ "sh" "-c" "git ls-remote https://github.com/kcalvelli/cairn.git master | cut -c 1-7" ]
               '';
             };
 
@@ -184,13 +184,13 @@
             (
               if isNixOS then
                 {
-                  environment.etc."xdg/quickshell/dms-plugins/AxiosMonitor" = {
+                  environment.etc."xdg/quickshell/dms-plugins/CairnMonitor" = {
                     source = pluginDir;
                   };
                 }
               else
                 {
-                  home.file.".config/DankMaterialShell/plugins/AxiosMonitor" = {
+                  home.file.".config/DankMaterialShell/plugins/CairnMonitor" = {
                     source = pluginDir;
                     recursive = true;
                   };
@@ -200,9 +200,9 @@
         };
     in
     {
-      homeManagerModules.default = mkAxiosMonitorModule { isNixOS = false; };
+      homeManagerModules.default = mkCairnMonitorModule { isNixOS = false; };
 
-      nixosModules.default = mkAxiosMonitorModule { isNixOS = true; };
+      nixosModules.default = mkCairnMonitorModule { isNixOS = true; };
 
       dmsPlugin = self;
     };

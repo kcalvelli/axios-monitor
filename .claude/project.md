@@ -1,10 +1,10 @@
-# axiOS Monitor
+# Cairn Monitor
 
 ## Project Overview
 
-**axiOS Monitor** is a DankMaterialShell (DMS) plugin for monitoring axiOS systems with integrated rebuild and update tracking capabilities. This is a specialized fork of [nix-monitor](https://github.com/antonjah/nix-monitor) by Anton Andersson, customized exclusively for the [axiOS](https://github.com/kcalvelli/axios) modular NixOS distribution.
+**Cairn Monitor** is a DankMaterialShell (DMS) plugin for monitoring Cairn systems with integrated rebuild and update tracking capabilities. This is a specialized fork of [nix-monitor](https://github.com/antonjah/nix-monitor) by Anton Andersson, customized exclusively for the [Cairn](https://github.com/kcalvelli/cairn) modular NixOS distribution.
 
-**Important**: This plugin is NOT compatible with standard NixOS installations - it is designed specifically for axiOS systems.
+**Important**: This plugin is NOT compatible with standard NixOS installations - it is designed specifically for Cairn systems.
 
 ## Technology Stack
 
@@ -47,9 +47,9 @@
 The plugin uses a dual-configuration approach:
 
 1. **Nix-level config** (`flake.nix`):
-   - Defines commands via `programs.axios-monitor.*` options
+   - Defines commands via `programs.cairn-monitor.*` options
    - Generates `config.json` at build time
-   - Provides sensible defaults for axiOS
+   - Provides sensible defaults for Cairn
 
 2. **Runtime config** (QML):
    - Loads `config.json` on startup
@@ -61,7 +61,7 @@ The plugin uses a dual-configuration approach:
 #### Monitoring
 - **Generation Count**: Tracks NixOS system generations
 - **Store Size**: Monitors Nix store disk usage with threshold warnings
-- **Update Status**: Compares local vs remote axiOS revisions
+- **Update Status**: Compares local vs remote Cairn revisions
 
 #### Actions
 - **Rebuild Switch**: `nixos-rebuild switch` - activates immediately
@@ -75,20 +75,20 @@ The plugin uses a dual-configuration approach:
 - **Real-time Console**: Live stdout/stderr from running operations
 - **Visual Warnings**: Color-coded indicators when thresholds are exceeded
 
-## axiOS-Specific Features
+## Cairn-Specific Features
 
 Unlike generic nix-monitor, this fork includes:
 
 1. **Two Rebuild Buttons**: Separate switch and boot operations
-2. **axiOS Version Tracking**: Monitors `axios` flake input instead of nixpkgs
-3. **Zero Configuration**: Auto-configured when using axiOS desktop module
+2. **Cairn Version Tracking**: Monitors `cairn` flake input instead of nixpkgs
+3. **Zero Configuration**: Auto-configured when using Cairn desktop module
 4. **Smart Flake Detection**: Uses `$FLAKE_PATH` or defaults to `~/.config/nixos_config`
 5. **GUI Password Prompts**: Uses `sudo -A` with `SUDO_ASKPASS` pointing to `lxqt-openssh-askpass`
 
 ## File Structure
 
 ```
-axios-monitor/
+cairn-monitor/
 ├── .claude/
 │   └── project.md              # This file
 ├── assets/
@@ -105,13 +105,13 @@ axios-monitor/
 
 ## Configuration Options
 
-### Nix Module Options (`programs.axios-monitor`)
+### Nix Module Options (`programs.cairn-monitor`)
 
 **Required Commands** (all have defaults):
 - `rebuildCommand` - Command for `nixos-rebuild switch`
 - `rebuildBootCommand` - Command for `nixos-rebuild boot`
-- `localRevisionCommand` - Get local axiOS revision from flake.lock
-- `remoteRevisionCommand` - Get remote axiOS revision from GitHub
+- `localRevisionCommand` - Get local Cairn revision from flake.lock
+- `remoteRevisionCommand` - Get remote Cairn revision from GitHub
 - `updateFlakeCommand` - Update flake.lock
 
 **Optional Commands** (with defaults):
@@ -126,7 +126,7 @@ axios-monitor/
 - `showStoreSize` - Toggle store size display
 - `updateInterval` - Refresh interval (60-3600s)
 - `gcThresholdGB` - Warning threshold (10-200 GB)
-- `checkUpdates` - Enable axiOS update checking
+- `checkUpdates` - Enable Cairn update checking
 - `updateCheckInterval` - Update check interval (300-86400s)
 
 ## Process Management
@@ -140,17 +140,17 @@ The plugin uses QML `Process` components to execute commands:
 - `rebuildBootProcess` - Runs nixos-rebuild boot
 - `updateFlakeProcess` - Updates flake.lock
 - `garbageCollectProcess` - Runs GC
-- `localRevisionProcess` - Gets local axiOS revision
-- `remoteRevisionProcess` - Gets remote axiOS revision
+- `localRevisionProcess` - Gets local Cairn revision
+- `remoteRevisionProcess` - Gets remote Cairn revision
 
 All processes capture stdout/stderr and display in the console output.
 
 ## Development Workflow
 
 ### Installation for Testing
-1. Build with Nix: Plugin is distributed via axiOS flake
-2. Installed to `~/.config/DankMaterialShell/plugins/AxiosMonitor/` (home-manager)
-3. Or `/etc/xdg/quickshell/dms-plugins/AxiosMonitor` (NixOS module)
+1. Build with Nix: Plugin is distributed via Cairn flake
+2. Installed to `~/.config/DankMaterialShell/plugins/CairnMonitor/` (home-manager)
+3. Or `/etc/xdg/quickshell/dms-plugins/CairnMonitor` (NixOS module)
 
 ### Making Changes
 1. Edit QML files directly
@@ -161,12 +161,12 @@ All processes capture stdout/stderr and display in the console output.
 ### Testing
 - Use DMS Settings → Plugins to toggle plugin on/off
 - Monitor console output for debugging
-- Check `~/.config/DankMaterialShell/plugins/AxiosMonitor/config.json` for config issues
+- Check `~/.config/DankMaterialShell/plugins/CairnMonitor/config.json` for config issues
 
 ## Dependencies
 
 ### System Requirements
-- axiOS (required - this is axiOS-specific)
+- Cairn (required - this is Cairn-specific)
 - DankMaterialShell >= 1.0.0
 - Nix package manager
 - bash (for command execution)
@@ -195,7 +195,7 @@ All processes capture stdout/stderr and display in the console output.
 
 ### Update Status Shows N/A
 **Symptom**: Version shows N/A or red error
-**Solution**: Ensure flake.lock has `axios` input and network access to GitHub
+**Solution**: Ensure flake.lock has `cairn` input and network access to GitHub
 
 ### Rebuild Buttons Don't Work
 **Symptom**: Nothing happens when clicking rebuild
@@ -218,7 +218,7 @@ All processes capture stdout/stderr and display in the console output.
 
 ## Links
 
-- **axiOS**: https://github.com/kcalvelli/axios
+- **Cairn**: https://github.com/kcalvelli/cairn
 - **DankMaterialShell**: https://github.com/AvengeMedia/DankMaterialShell
 - **Original nix-monitor**: https://github.com/antonjah/nix-monitor
 - **Author**: Keith Calvelli (https://github.com/kcalvelli)

@@ -45,7 +45,7 @@ PluginComponent {
 
     Process {
         id: configLoader
-        command: ["cat", Quickshell.env("HOME") + "/.config/DankMaterialShell/plugins/AxiosMonitor/config.json"]
+        command: ["cat", Quickshell.env("HOME") + "/.config/DankMaterialShell/plugins/CairnMonitor/config.json"]
         running: false
 
         stdout: SplitParser {
@@ -98,7 +98,7 @@ PluginComponent {
     }
 
     Component.onCompleted: {
-        console.info("axiOS Monitor plugin loaded")
+        console.info("Cairn Monitor plugin loaded")
         configLoader.running = true
     }
 
@@ -197,7 +197,7 @@ PluginComponent {
     popoutContent: Component {
         PopoutComponent {
             id: popout
-            headerText: "axiOS Monitor"
+            headerText: "Cairn Monitor"
             detailsText: root.lastUpdate ? "Updated: " + root.lastUpdate : "Loading..."
             showCloseButton: true
 
@@ -308,7 +308,7 @@ PluginComponent {
                                 }
 
                                 StyledText {
-                                    text: root.canCompareVersions ? (root.isUpToDate ? "axiOS is up to date" : "axiOS update available") : "Could not fetch version info"
+                                    text: root.canCompareVersions ? (root.isUpToDate ? "Cairn is up to date" : "Cairn update available") : "Could not fetch version info"
                                     font.pixelSize: Theme.fontSizeMedium
                                     font.weight: Font.Bold
                                     color: Theme.surfaceText
@@ -573,7 +573,7 @@ PluginComponent {
         interval: root.updateCheckInterval * 1000
         running: root.checkUpdates
         repeat: true
-        onTriggered: root.checkAxiosUpdates()
+        onTriggered: root.checkCairnUpdates()
     }
 
     Process {
@@ -807,11 +807,11 @@ PluginComponent {
         generationCountProcess.running = true
         storeSizeProcess.running = true
         if (root.checkUpdates) {
-            root.checkAxiosUpdates()
+            root.checkCairnUpdates()
         }
     }
 
-    function checkAxiosUpdates() {
+    function checkCairnUpdates() {
         if (!root.isCheckingUpdates) {
             root.isCheckingUpdates = true
             localRevisionProcess.running = true
